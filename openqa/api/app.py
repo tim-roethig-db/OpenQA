@@ -14,6 +14,7 @@ from openqa.api.models.api_request_models import (
 )
 from openqa.api.formatter.black import run_black
 from openqa.api.setup.install_dependencies import repo_setup_crew
+from openqa.api.linter.pylint import run_pylint
 
 load_dotenv()
 
@@ -48,32 +49,4 @@ async def setup_environment(request: SetupEnvRequest):
 
 @app.post("/pylint-check/")
 async def pylint_check(request: PylintRequest):
-    python_executable = (
-        os.path.join(request.venv_directory, "bin", "python")
-        if os.name != "nt"
-        else os.path.join(request.venv_directory, "Scripts", "python.exe")
-    )
-
-    # Run pylint with JSON output on the target directory
-    result = subprocess.run(
-        [python_executable, "-m", "pylint", str(request.directory), "-f", "json"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-
-    # Parse the JSON output
-    pylint_output = json.loads(result.stdout)
-    print(pylint_output)
-
-    # Filter errors and warnings
-    errors = [item for item in pylint_output if item["type"] == "error"]
-    warnings = [item for item in pylint_output if item["type"] == "warning"]
-
-    # Determine the message based on the output
-    if errors:
-        return {"message": "fail", "output": errors}
-    elif warnings:
-        return {"message": "warning", "output": warnings}
-    else:
-        return {"message": "pass", "output": pylint_output}
+    return run_pylint(venv_dir=request.venv_directory, repo_dir=request.directory)

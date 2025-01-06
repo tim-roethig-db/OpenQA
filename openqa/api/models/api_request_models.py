@@ -1,9 +1,9 @@
-from pydantic import BaseModel, HttpUrl, DirectoryPath, Field
+from pydantic import BaseModel, HttpUrl, DirectoryPath, Field, NewPath
 
 
 class RepoCloneRequest(BaseModel):
     url: HttpUrl = Field(..., example="https://github.com/tim-roethig-db/amondin.git")
-    directory: DirectoryPath = Field(
+    directory: NewPath = Field(
         ..., example="/Users/tim/Desktop/Projekte/OpenQA/target_repo"
     )
 
