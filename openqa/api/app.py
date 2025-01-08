@@ -3,7 +3,7 @@ import subprocess
 import json
 import shutil
 import git
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from dotenv import load_dotenv
 
 from openqa.api.models.api_request_models import (
@@ -13,7 +13,7 @@ from openqa.api.models.api_request_models import (
     PylintRequest,
 )
 from openqa.api.formatter.black import run_black
-from openqa.api.setup.install_dependencies import repo_setup_crew
+from openqa.api.setup_env.setup_env import setup_env
 from openqa.api.linter.pylint import run_pylint
 
 load_dotenv()
@@ -40,11 +40,7 @@ async def format_check(request: FormatCheckRequest):
 
 @app.post("/setup-environment/")
 async def setup_environment(request: SetupEnvRequest):
-    repo_setup_crew(
-        directory=request.directory,
-        venv_path=request.venv_directory,
-        python_version=request.python_version,
-    )
+    setup_env()
 
 
 @app.post("/pylint-check/")

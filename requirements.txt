@@ -8,3 +8,4 @@ openai
 crewai
 python-dotenv
 langchain-community
+docker
