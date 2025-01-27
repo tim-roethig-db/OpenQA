@@ -22,41 +22,41 @@ class ShellExecuteTool(BaseTool):
             return f"Error running shell script: {str(e)}"
 
 
-def repo_setup_crew(directory: str, venv_path: str, python_version: str = "3.11"):
-    print(directory)
-    print(str(directory))
-    dir_read_tool = DirectoryReadTool(directory=str(directory))
+def repo_setup_crew():
+    repo_dir = "/target_repo"
+    app_venv_dir = "/app_venv"
+    dir_read_tool = DirectoryReadTool(directory=str(repo_dir))
     shell_tool = ShellExecuteTool()
 
     devops = Agent(
         role="Senior DevOps Engineer",
         goal="Install the dependencies for a given python project.",
         backstory="""You are an experienced DevOps engineer.
-        You received a python code base from a colleague.
-        You need to figure out how to install its dependencies.""",
+You received a python code base from a colleague.
+You need to figure out how to install its dependencies on debian linux.""",
         tools=[dir_read_tool, shell_tool],
         verbose=True,
     )
 
     identify_dependencies = Task(
-        description=f"""Screen the python code base under: '{directory}'.
-        Identify how the dependencies of this python code base can be installed.""",
+        description=f"""Screen the python code base under: '{repo_dir}'.
+Identify:
+1. Which python version is suited best for the code base. 
+Prefer python 3.11 if nothing contradicting is specified.
+2. How the dependencies of this python code base can be installed.""",
         expected_output="A plan on how to install the dependencies of this python code base.",
         agent=devops,
     )
 
     create_setup_script = Task(
-        description="""Create a shell script that installs the needed dependencies.""",
-        expected_output="A shell script that installs all needed python dependencies.",
+        description=f"""Create and run a shell script that:
+1. Creates a venv with the suited python version under '{app_venv_dir}'.
+2. Installs the dependencies inside this venv.
+
+Note: python venv is available to you in python version 3.9, 3.10 and 3.11. If another version is required you need to install it yourself.""",
+        expected_output=f"A python venv with the suited python version under '{app_venv_dir}' and all needed python dependencies installed within.",
         agent=devops,
         context=[identify_dependencies],
-    )
-
-    setup_repo = Task(
-        description="Execute the shell script to create the python venv and install the needed dependencies.",
-        expected_output="A successful creation of the venv and installation of the dependencies.",
-        agent=devops,
-        context=[create_setup_script],
     )
 
     crew = Crew(
@@ -64,10 +64,13 @@ def repo_setup_crew(directory: str, venv_path: str, python_version: str = "3.11"
         tasks=[
             identify_dependencies,
             create_setup_script,
-            setup_repo,
         ],
         process=Process.sequential,
         verbose=True,
     )
 
     crew.kickoff()
+
+
+if __name__ == "__main__":
+    repo_setup_crew()
